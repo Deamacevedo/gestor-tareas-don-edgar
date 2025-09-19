@@ -55,50 +55,6 @@ gestor-tareas/
 1. **Node.js** (versión 18 o superior)
 2. **MongoDB** ejecutándose en `mongodb://localhost:27017`
 
-### Pasos de instalación
-
-1. **Clonar el repositorio**
-   ```bash
-   git clone <url-del-repositorio>
-   cd gestor-tareas
-   ```
-
-2. **Instalar dependencias**
-   ```bash
-   npm install
-   ```
-
-3. **Configurar MongoDB**
-
-   Asegúrate de que MongoDB esté ejecutándose en tu sistema:
-
-   **En Windows:**
-   ```bash
-   # Opción 1: Como servicio (recomendado)
-   net start MongoDB
-
-   # Opción 2: Ejecutar manualmente
-   mongod --dbpath="C:\data\db"
-   ```
-
-   **En Linux/macOS:**
-   ```bash
-   # Usando systemctl (Linux)
-   sudo systemctl start mongod
-
-   # Usando brew (macOS)
-   brew services start mongodb-community
-
-   # O ejecutar manualmente
-   mongod --dbpath=/usr/local/var/mongodb
-   ```
-
-4. **Ejecutar la aplicación**
-   ```bash
-   npm start
-   # o para desarrollo con auto-restart
-   npm run dev
-   ```
 
 ### Configuración de MongoDB
 
@@ -292,17 +248,12 @@ Los datos se almacenan automáticamente en MongoDB:
 }
 ```
 
-## 🤝 Contribución
+## 👥 Autores
 
-1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
+- **Dylan Acevedo**
+- **Jeferson Lopez**
 
-## 📝 Licencia
 
-Este proyecto está bajo la Licencia ISC.
 
 ## 🆘 Troubleshooting
 
