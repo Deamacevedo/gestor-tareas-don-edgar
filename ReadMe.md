@@ -1,6 +1,6 @@
 # 📋 Gestor de Tareas CLI
 
-Un sistema profesional de gestión de tareas por línea de comandos, desarrollado con Node.js, que ofrece persistencia de datos, validaciones robustas y una interfaz intuitiva.
+Un sistema profesional de gestión de tareas por línea de comandos, desarrollado con Node.js, que ofrece persistencia de datos en MongoDB, validaciones robustas y una interfaz intuitiva.
 
 ## 🚀 Características
 
@@ -12,18 +12,18 @@ Un sistema profesional de gestión de tareas por línea de comandos, desarrollad
 - 🔍 **Buscar tareas** por palabras clave
 - 📊 **Ver estadísticas** detalladas
 - 🗑️ **Eliminar tareas** con confirmación
-- 💾 **Persistencia automática** en archivos JSON
+- 💾 **Persistencia automática** en MongoDB
 
 ### 🛠️ Tecnologías utilizadas:
 - **Node.js** con módulos ES6
+- **MongoDB** con driver nativo para persistencia
 - **Lodash** para manipulación eficiente de datos
 - **Inquirer.js** para interfaces interactivas
-- **File System (fs)** para persistencia
 - **Arquitectura modular** con separación de responsabilidades
 
 ### 🔧 Características técnicas avanzadas:
 - **Ordenamiento inteligente**: Tareas pendientes primero, luego por fecha
-- **IDs únicos**: Generados con Lodash para evitar conflictos
+- **IDs únicos**: Generados con ObjectId de MongoDB para evitar conflictos
 - **Validaciones**: Prevención de tareas vacías y duplicadas
 - **Búsqueda insensible a mayúsculas**: Encuentra tareas fácilmente
 - **Estadísticas completas**: Total, completadas, pendientes y día más productivo
@@ -36,16 +36,87 @@ gestor-tareas/
 ├── index.js                    # Punto de entrada principal
 ├── package.json               # Dependencias y scripts
 ├── README.md                  # Documentación
+├── config/
+│   └── database.js           # Configuración de MongoDB
 ├── controllers/
 │   └── tareasController.js    # Lógica de negocio de tareas
 ├── models/
-│   └── tarea.js              # Modelo de datos con Lodash
+│   └── tarea.js              # Modelo de datos con MongoDB
 ├── utils/
-│   ├── menu.js               # Interfaz del menú CLI
-│   └── fileStorage.js        # Gestión de persistencia
+│   └── menu.js               # Interfaz del menú CLI
 └── data/
-    ├── tareas.js             # Gestión del estado global
-    └── tareas.json           # Archivo de persistencia (generado automáticamente)
+    └── tareas.js             # Gestión del estado global con MongoDB
+```
+
+## 🔧 Instalación y configuración
+
+### Requisitos previos
+
+1. **Node.js** (versión 18 o superior)
+2. **MongoDB** ejecutándose en `mongodb://localhost:27017`
+
+### Pasos de instalación
+
+1. **Clonar el repositorio**
+   ```bash
+   git clone <url-del-repositorio>
+   cd gestor-tareas
+   ```
+
+2. **Instalar dependencias**
+   ```bash
+   npm install
+   ```
+
+3. **Configurar MongoDB**
+
+   Asegúrate de que MongoDB esté ejecutándose en tu sistema:
+
+   **En Windows:**
+   ```bash
+   # Opción 1: Como servicio (recomendado)
+   net start MongoDB
+
+   # Opción 2: Ejecutar manualmente
+   mongod --dbpath="C:\data\db"
+   ```
+
+   **En Linux/macOS:**
+   ```bash
+   # Usando systemctl (Linux)
+   sudo systemctl start mongod
+
+   # Usando brew (macOS)
+   brew services start mongodb-community
+
+   # O ejecutar manualmente
+   mongod --dbpath=/usr/local/var/mongodb
+   ```
+
+4. **Ejecutar la aplicación**
+   ```bash
+   npm start
+   # o para desarrollo con auto-restart
+   npm run dev
+   ```
+
+### Configuración de MongoDB
+
+La aplicación utiliza la siguiente configuración por defecto:
+- **URL de conexión**: `mongodb://localhost:27017`
+- **Base de datos**: `gestor-tareas`
+- **Colección**: `tareas`
+
+Si necesitas cambiar esta configuración, edita el archivo `config/database.js`.
+
+### Verificación de instalación
+
+Si todo está configurado correctamente, al ejecutar `npm start` deberías ver:
+
+```
+🚀 Iniciando Gestor de Tareas...
+✅ Conectado a MongoDB
+✅ Sistema listo
 ```
 
 ## 🎮 Uso de la aplicación
@@ -119,9 +190,9 @@ Al iniciar la aplicación, verás el siguiente menú:
 
 El sistema utiliza extensivamente Lodash para optimizar las operaciones:
 
-### 1. **Generación de IDs únicos**
+### 1. **Generación de IDs únicos con MongoDB**
 ```javascript
-this.id = _.uniqueId('tarea_'); // Genera: tarea_1, tarea_2, etc.
+this._id = id || new ObjectId(); // Genera ObjectIds únicos de MongoDB
 ```
 
 ### 2. **Validaciones robustas**
@@ -158,39 +229,44 @@ _.groupBy(tareas, tarea => new Date(tarea.fechaCreacion).toDateString())
 _.maxBy(grupos, ([fecha, tareas]) => tareas.length)
 ```
 
-### 8. **Eliminación segura**
+### 8. **Eliminación segura con ObjectIds**
 ```javascript
-_.remove(tareas, { id: tareaSeleccionada })
+_.remove(tareas, t => t._id.equals(tareaSeleccionada))
 ```
 
-## 💾 Persistencia de datos
+## 💾 Persistencia de datos con MongoDB
 
-### Ubicación del archivo
-Los datos se guardan automáticamente en: `data/tareas.json`
+### Base de datos
+Los datos se almacenan automáticamente en MongoDB:
+- **Base de datos**: `gestor-tareas`
+- **Colección**: `tareas`
+- **Conexión**: `mongodb://localhost:27017`
 
-### Estructura del archivo JSON
-```json
-[
-  {
-    "id": "tarea_1",
-    "descripcion": "Completar el proyecto",
-    "completada": false,
-    "fechaCreacion": "2024-09-17T10:30:00.000Z"
-  },
-  {
-    "id": "tarea_2",
-    "descripcion": "Revisar documentación",
-    "completada": true,
-    "fechaCreacion": "2024-09-16T14:20:00.000Z",
-    "fechaCompletada": "2024-09-17T09:15:00.000Z"
-  }
-]
+### Estructura de documentos MongoDB
+```javascript
+{
+  "_id": ObjectId("507f1f77bcf86cd799439011"),
+  "descripcion": "Completar el proyecto",
+  "completada": false,
+  "fechaCreacion": "2024-09-17T10:30:00.000Z"
+}
+
+// Ejemplo de tarea completada
+{
+  "_id": ObjectId("507f1f77bcf86cd799439012"),
+  "descripcion": "Revisar documentación",
+  "completada": true,
+  "fechaCreacion": "2024-09-16T14:20:00.000Z",
+  "fechaCompletada": "2024-09-17T09:15:00.000Z"
+}
 ```
 
 ### Operaciones automáticas
-- **Carga**: Al iniciar la aplicación
+- **Conexión**: Al iniciar la aplicación se conecta a MongoDB
+- **Carga**: Recupera todas las tareas existentes de la base de datos
 - **Guardado**: Después de cada operación (crear, editar, completar, eliminar)
-- **Respaldo**: Se mantiene la integridad de datos en todo momento
+- **Cierre**: La conexión se cierra al salir de la aplicación
+- **Integridad**: MongoDB garantiza la persistencia y consistencia de los datos
 
 ## 🔒 Validaciones y seguridad
 
@@ -232,19 +308,46 @@ Este proyecto está bajo la Licencia ISC.
 
 ### Problemas comunes:
 
-**Error: "Cannot find module 'lodash'"**
+**Error: "Cannot find module 'lodash'" o "Cannot find module 'mongodb'"**
 ```bash
 npm install
 ```
 
-**Error: "Permission denied"**
-- Verifica permisos de escritura en la carpeta `data/`
+**Error: "MongoNetworkError" o "Connection refused"**
+- Verifica que MongoDB esté ejecutándose en `localhost:27017`
+- En Windows: `net start MongoDB` o ejecuta MongoDB Compass
+- En Linux/macOS: `sudo systemctl start mongod` o `brew services start mongodb-community`
 
-**Error: "Invalid JSON"**
-- Elimina el archivo `data/tareas.json` (se regenerará automáticamente)
+**Error: "MongoServerError: Authentication failed"**
+- La aplicación usa conexión sin autenticación por defecto
+- Si tu MongoDB requiere autenticación, edita `config/database.js`
 
 **La aplicación no guarda datos**
-- Verifica que existe la carpeta `data/` en el directorio del proyecto
+- Verifica que tengas permisos de escritura en la base de datos MongoDB
+- Comprueba que la conexión a MongoDB sea exitosa (debería mostrar "✅ Conectado a MongoDB")
+
+**Error: "MongoTopologyClosedError"**
+- La conexión a MongoDB se cerró inesperadamente
+- Reinicia MongoDB y ejecuta la aplicación nuevamente
+
+### Verificar estado de MongoDB:
+
+**Verificar si MongoDB está ejecutándose:**
+```bash
+# Windows
+tasklist | findstr mongo
+
+# Linux/macOS
+ps aux | grep mongo
+```
+
+**Conectar manualmente a MongoDB:**
+```bash
+# Con MongoDB Shell
+mongosh mongodb://localhost:27017
+
+# O con MongoDB Compass (interfaz gráfica)
+```
 
 ---
 

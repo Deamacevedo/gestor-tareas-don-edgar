@@ -24,8 +24,10 @@ import {
   mostrarEstadisticas    // Muestra estadísticas del sistema
 } from './controllers/tareasController.js';
 
-// Importamos la función que carga las tareas desde el archivo JSON
+// Importamos la función que carga las tareas desde MongoDB
 import { inicializarTareas } from './data/tareas.js';
+// Importamos la función para cerrar la conexión de MongoDB
+import { cerrarConexion } from './config/database.js';
 
 /**
  * FUNCIÓN PRINCIPAL DE LA APLICACIÓN
@@ -39,8 +41,8 @@ async function main() {
   console.log('🚀 Iniciando Gestor de Tareas...');
 
   // PASO 1: Inicializar el sistema
-  // Carga las tareas existentes desde el archivo JSON
-  // Si no existe el archivo, comienza con una lista vacía
+  // Carga las tareas existentes desde MongoDB
+  // Si no puede conectar, comienza con una lista vacía
   await inicializarTareas();
   console.log('✅ Sistema listo\n');
 
@@ -115,7 +117,9 @@ async function main() {
         // Cambia la variable de control para terminar el bucle
         salir = true;
         console.log('👋 ¡Gracias por usar el Gestor de Tareas!');
-        console.log('💾 Todas tus tareas han sido guardadas automáticamente.');
+        console.log('💾 Todas tus tareas han sido guardadas automáticamente en MongoDB.');
+        // Cerrar la conexión a MongoDB de forma segura
+        await cerrarConexion();
         break;
 
       default:
@@ -139,7 +143,13 @@ async function main() {
  * Ejecuta la función principal y captura cualquier error no manejado.
  * Si ocurre un error crítico, lo muestra y termina la aplicación con código de error.
  */
-main().catch(error => {
+main().catch(async error => {
   console.error('❌ Error en la aplicación:', error.message);
+  // Asegurar que la conexión se cierre incluso si hay error
+  try {
+    await cerrarConexion();
+  } catch (closeError) {
+    console.error('❌ Error cerrando conexión:', closeError.message);
+  }
   process.exit(1); // Termina con código de error 1
 });
