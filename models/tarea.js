@@ -1,14 +1,14 @@
 /**
- * MODELO DE DATOS: CLASE TAREA
- * ============================
+ * MODELO DE DATOS: CLASE TAREA PARA MONGODB
+ * =========================================
  *
- * Define la estructura y comportamiento de una tarea individual.
+ * Define la estructura y comportamiento de una tarea individual para MongoDB.
  * Utiliza Lodash para:
- * - _.uniqueId(): Generar identificadores únicos automáticamente
  * - _.isEmpty(): Validar que las descripciones no estén vacías
+ * - Operaciones de manipulación de datos
  *
  * Características principales:
- * - IDs únicos generados automáticamente
+ * - Compatible con documentos MongoDB
  * - Timestamps ISO para trazabilidad
  * - Métodos para cambiar estado
  * - Validaciones estáticas
@@ -16,6 +16,8 @@
 
 // Importamos Lodash para utilidades de datos
 import _ from 'lodash';
+// Importamos ObjectId para generar IDs únicos de MongoDB
+import { ObjectId } from 'mongodb';
 
 /**
  * CLASE TAREA
@@ -31,14 +33,12 @@ export class Tarea {
    *
    * Inicializa una nueva tarea con valores por defecto.
    * Genera automáticamente un ID único y establece la fecha de creación.
-   *
-   * @param {string} descripcion - Descripción de la tarea a realizar
    */
-  constructor(descripcion) {
-    // GENERAR ID ÚNICO CON LODASH
-    // _.uniqueId() genera IDs secuenciales únicos con un prefijo personalizado
-    // Ejemplo: 'tarea_1', 'tarea_2', 'tarea_3', etc.
-    this.id = _.uniqueId('tarea_');
+  constructor(descripcion, id = null) {
+    // GENERAR ID ÚNICO CON MONGODB OBJECTID
+    // Si no se proporciona un ID, generamos uno nuevo con ObjectId
+    // Si se proporciona (al cargar desde DB), lo usamos tal como está
+    this._id = id || new ObjectId();
 
     // LIMPIAR Y ASIGNAR DESCRIPCIÓN
     // .trim() elimina espacios en blanco al inicio y final
@@ -92,9 +92,6 @@ export class Tarea {
    *
    * Valida que una descripción sea válida antes de crear una tarea.
    * Utiliza Lodash para una validación más robusta.
-   *
-   * @param {string} descripcion - Descripción a validar
-   * @returns {boolean} - true si es válida, false en caso contrario
    */
   static validarDescripcion(descripcion) {
     // VALIDACIÓN CON LODASH
@@ -110,10 +107,6 @@ export class Tarea {
    *
    * Factory method que crea una nueva tarea con validaciones.
    * Lanza una excepción si la descripción no es válida.
-   *
-   * @param {string} descripcion - Descripción de la nueva tarea
-   * @returns {Tarea} - Nueva instancia de Tarea
-   * @throws {Error} - Si la descripción está vacía o es inválida
    */
   static crearTarea(descripcion) {
     // VALIDACIÓN OBLIGATORIA ANTES DE CREAR
@@ -125,5 +118,50 @@ export class Tarea {
     // CREAR Y RETORNAR NUEVA INSTANCIA
     // Si pasa la validación, procede con la creación normal
     return new Tarea(descripcion);
+  }
+
+  /**
+   * MÉTODO ESTÁTICO: CREAR DESDE DOCUMENTO MONGODB
+   * ==============================================
+   *
+   * Crea una instancia de Tarea a partir de un documento de MongoDB.
+   * Preserva el _id original y todas las propiedades del documento.
+   */
+  static desdeDocumento(documento) {
+    const tarea = new Tarea(documento.descripcion, documento._id);
+
+    // Restaurar propiedades adicionales del documento
+    tarea.completada = documento.completada || false;
+    tarea.fechaCreacion = documento.fechaCreacion;
+
+    // Si existe fecha de completado, la restauramos
+    if (documento.fechaCompletada) {
+      tarea.fechaCompletada = documento.fechaCompletada;
+    }
+
+    return tarea;
+  }
+
+  /**
+   * MÉTODO: CONVERTIR A DOCUMENTO MONGODB
+   * ====================================
+   *
+   * Convierte la instancia de Tarea a un documento compatible con MongoDB.
+   * Excluye métodos y mantiene solo las propiedades de datos.
+   */
+  toDocumento() {
+    const documento = {
+      _id: this._id,
+      descripcion: this.descripcion,
+      completada: this.completada,
+      fechaCreacion: this.fechaCreacion
+    };
+
+    // Solo incluir fechaCompletada si existe
+    if (this.fechaCompletada) {
+      documento.fechaCompletada = this.fechaCompletada;
+    }
+
+    return documento;
   }
 }

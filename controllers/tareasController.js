@@ -172,14 +172,14 @@ export async function editarTarea() {
         // Mostrar estado visual y descripción
         name: `[${t.completada ? '✅' : '❌'}] ${t.descripcion}`,
         // El valor será el ID único para búsqueda posterior
-        value: t.id
+        value: t._id
       }))
     }
   ]);
 
   // PASO 3: Encontrar la tarea seleccionada usando Lodash
-  // _.find() con objeto es equivalente a t => t.id === tareaSeleccionada
-  const tarea = _.find(tareas, { id: tareaSeleccionada });
+  // Para ObjectIds necesitamos usar equals() para comparación
+  const tarea = _.find(tareas, t => t._id.equals(tareaSeleccionada));
 
   // PASO 4: Solicitar nueva descripción con validaciones
   const { nuevaDescripcion } = await inquirer.prompt([
@@ -197,7 +197,7 @@ export async function editarTarea() {
         // VALIDACIÓN 2: Evitar duplicados (excluyendo la tarea actual)
         // Comparamos con todas las tareas EXCEPTO la que estamos editando
         const duplicada = _.find(tareas, t =>
-          t.id !== tareaSeleccionada &&
+          !t._id.equals(tareaSeleccionada) &&
           _.toLower(t.descripcion) === _.toLower(input.trim())
         );
         if (duplicada) {
@@ -249,13 +249,13 @@ export async function completarTarea() {
       choices: tareasOrdenadas.map(t => ({
         // Solo mostramos la descripción (sin estado, ya son pendientes)
         name: t.descripcion,
-        value: t.id
+        value: t._id
       }))
     }
   ]);
 
   // PASO 4: Encontrar y marcar la tarea como completada
-  const tarea = _.find(tareas, { id: tareaSeleccionada });
+  const tarea = _.find(tareas, t => t._id.equals(tareaSeleccionada));
   tarea.marcarCompletada(); // Método del modelo que actualiza estado y fecha
 
   // PASO 5: Persistir cambios al archivo
@@ -289,7 +289,7 @@ export async function eliminarTarea() {
       choices: tareasOrdenadas.map(t => ({
         // Mostrar estado visual para facilitar identificación
         name: `[${t.completada ? '✅' : '❌'}] ${t.descripcion}`,
-        value: t.id
+        value: t._id
       }))
     }
   ]);
@@ -308,8 +308,8 @@ export async function eliminarTarea() {
   // PASO 4: Procesar confirmación
   if (confirmar) {
     // _.remove() modifica el array original eliminando elementos
-    // que coinciden con el criterio (más eficiente que splice)
-    _.remove(tareas, { id: tareaSeleccionada });
+    // Para ObjectIds necesitamos usar una función de comparación
+    _.remove(tareas, t => t._id.equals(tareaSeleccionada));
     await persistirTareas();
     console.log('🗑️ Tarea eliminada exitosamente.');
   } else {
